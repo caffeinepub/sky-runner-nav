@@ -1,0 +1,101 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@font-face {
+  font-family: "GeistMono";
+  src: url("/assets/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.25rem;
+    /* Dark theme tokens - background #020202 */
+    --background: 0.08 0 0;
+    --foreground: 0.92 0 0;
+    --card: 0.12 0.002 80;
+    --card-foreground: 0.92 0 0;
+    --popover: 0.12 0.002 80;
+    --popover-foreground: 0.92 0 0;
+    /* Gold accent #D4AF37 -> oklch ~0.78 0.15 85 */
+    --primary: 0.78 0.15 85;
+    --primary-foreground: 0.08 0 0;
+    --secondary: 0.18 0.002 80;
+    --secondary-foreground: 0.92 0 0;
+    --muted: 0.15 0.002 80;
+    --muted-foreground: 0.58 0 0;
+    --accent: 0.78 0.15 85;
+    --accent-foreground: 0.08 0 0;
+    --destructive: 0.62 0.22 25;
+    --destructive-foreground: 0.92 0 0;
+    /* Border #2F2F34 */
+    --border: 0.22 0.002 270;
+    --input: 0.18 0.002 80;
+    --ring: 0.78 0.15 85;
+    --chart-1: 0.78 0.15 85;
+    --chart-2: 0.6 0.12 220;
+    --chart-3: 0.65 0.15 160;
+    --chart-4: 0.7 0.18 50;
+    --chart-5: 0.55 0.2 300;
+    --sidebar: 0.12 0.002 80;
+    --sidebar-foreground: 0.92 0 0;
+    --sidebar-primary: 0.78 0.15 85;
+    --sidebar-primary-foreground: 0.08 0 0;
+    --sidebar-accent: 0.18 0.002 80;
+    --sidebar-accent-foreground: 0.92 0 0;
+    --sidebar-border: 0.22 0.002 270;
+    --sidebar-ring: 0.78 0.15 85;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono;
+    background-color: #020202;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0e0e0f;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2f2f34;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d4af37;
+  }
+
+  /* MapLibre overrides */
+  .maplibregl-ctrl-group {
+    background: #1a1819 !important;
+    border: 1px solid #2f2f34 !important;
+  }
+  .maplibregl-ctrl-group button {
+    color: #d4af37 !important;
+  }
+  .maplibregl-ctrl-group button:hover {
+    background: #2f2f34 !important;
+  }
+  .maplibregl-ctrl-attrib {
+    background: rgba(2, 2, 2, 0.7) !important;
+    color: #a7a7ad !important;
+  }
+  .maplibregl-ctrl-attrib a {
+    color: #d4af37 !important;
+  }
+}
