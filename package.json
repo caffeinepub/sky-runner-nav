@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "sharp": "^0.34.4"
+  },
+  "dependencies": {
+    "maplibre-gl": "^5.22.0"
   }
 }

@@ -25,7 +25,9 @@ import type {
   SpeedLimit,
   TravelMode,
   Waypoint,
+  XutionBuilding,
 } from "./types";
+import { getCachedOverlay } from "./utils/overlayCache";
 
 const INITIAL_OVERLAYS: OverlayType[] = [
   {
@@ -104,6 +106,7 @@ const INITIAL_STATIC_OVERLAYS = [
   { id: "warning-rings", label: "⚠ Warning Rings", active: false },
   { id: "plane-routes", label: "✈ Plane Routes", active: false },
   { id: "country-borders", label: "🗺 Borders", active: false },
+  { id: "xution-buildings", label: "🏛 Xution Bldgs", active: false },
 ];
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
@@ -170,6 +173,17 @@ export default function App() {
     lng: number;
   } | null>(null);
 
+  // Xution Buildings state
+  const [xutionBuildings, setXutionBuildings] = useState<XutionBuilding[]>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem("xution-buildings") || "[]");
+      } catch {
+        return [];
+      }
+    },
+  );
+
   // Navigation active state
   const [navigationActive, setNavigationActive] = useState(false);
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(
@@ -192,13 +206,43 @@ export default function App() {
 
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
 
+  // Keep a ref to overlays so async online handler can read latest value
+  const overlaysRef = useRef(overlays);
+  useEffect(() => {
+    overlaysRef.current = overlays;
+  }, [overlays]);
+
   const { position } = useGeolocation();
   const { fetchNodes, fetchSpeedLimits } = useOverpass();
   const { route, calculateRoute } = useRoute();
 
   // Offline detection
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = async () => {
+      setIsOffline(false);
+      // Re-fetch active overlays for current area (only if not already cached)
+      if (!mapInstanceRef.current) return;
+      const bounds = mapInstanceRef.current.getBounds();
+      const bbox: [number, number, number, number] = [
+        bounds.getSouth(),
+        bounds.getWest(),
+        bounds.getNorth(),
+        bounds.getEast(),
+      ];
+      const activeOverlays = overlaysRef.current.filter((o) => o.active);
+      for (const overlay of activeOverlays) {
+        // getCachedOverlay returns null if not cached for this area
+        const cached = getCachedOverlay(overlay.id, bbox);
+        if (!cached) {
+          try {
+            const nodes = await fetchNodes(overlay.id, overlay.query, bbox);
+            setOverlayData((prev) => ({ ...prev, [overlay.id]: nodes }));
+          } catch {
+            // ignore individual overlay failures
+          }
+        }
+      }
+    };
     const handleOffline = () => setIsOffline(true);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -206,7 +250,7 @@ export default function App() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [fetchNodes]);
 
   // Real-time rest stop timer
   useEffect(() => {
@@ -566,7 +610,7 @@ export default function App() {
           bounds.getEast(),
         ];
         try {
-          const nodes = await fetchNodes(overlay.query, bbox);
+          const nodes = await fetchNodes(overlay.id, overlay.query, bbox);
           setOverlayData((prev) => ({ ...prev, [id]: nodes }));
           toast.success(`${overlay.label}: ${nodes.length} found`);
         } catch {
@@ -668,9 +712,38 @@ export default function App() {
     toast.success("Waypoint added");
   }, []);
 
+  const handleAddXutionBuilding = useCallback(
+    (building: Omit<XutionBuilding, "id" | "createdAt">) => {
+      const newBuilding: XutionBuilding = {
+        ...building,
+        id: `xb-${Date.now()}`,
+        createdAt: Date.now(),
+      };
+      setXutionBuildings((prev) => {
+        const updated = [...prev, newBuilding];
+        localStorage.setItem("xution-buildings", JSON.stringify(updated));
+        return updated;
+      });
+      toast.success(`Xution Building added: ${building.name}`);
+    },
+    [],
+  );
+
+  const handleDeleteXutionBuilding = useCallback((id: string) => {
+    setXutionBuildings((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+      localStorage.setItem("xution-buildings", JSON.stringify(updated));
+      return updated;
+    });
+    toast("Building removed");
+  }, []);
+
   const handleMapReady = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
   }, []);
+
+  const showXutionBuildings =
+    staticOverlays.find((o) => o.id === "xution-buildings")?.active ?? false;
 
   return (
     <div className="flex flex-col h-screen bg-[#020202] font-mono overflow-hidden">
@@ -761,6 +834,9 @@ export default function App() {
           navigationActive={navigationActive}
           onGoPress={handleGoPress}
           onStopPress={handleStopPress}
+          xutionBuildings={xutionBuildings}
+          onAddXutionBuilding={handleAddXutionBuilding}
+          onDeleteXutionBuilding={handleDeleteXutionBuilding}
         />
 
         {/* Map */}
@@ -778,6 +854,8 @@ export default function App() {
             onMapClick={handleMapClick}
             mode={mode}
             flyingRestStops={flyingRestStops}
+            xutionBuildings={xutionBuildings}
+            showXutionBuildings={showXutionBuildings}
           />
 
           {/* Offline + GPS badge */}

@@ -58,3 +58,19 @@ export interface FlyingRestStop {
   lng: number;
   isForest: boolean;
 }
+
+export interface XutionBuilding {
+  id: string;
+  name: string;
+  category: string; // "Office" | "Shelter" | "Hub" | "Supply Depot" | "HQ" | "Other"
+  lat: number;
+  lng: number;
+  notes: string;
+  createdAt: number;
+}
+
+export interface CachedOverlayEntry {
+  nodes: OverpassNode[];
+  fetchedAt: number;
+  tileKey: string;
+}

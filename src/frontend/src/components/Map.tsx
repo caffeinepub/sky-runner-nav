@@ -7,6 +7,7 @@ import type {
   OverlayType,
   OverpassNode,
   Waypoint,
+  XutionBuilding,
 } from "../types";
 
 const FOREST_LABELS = [
@@ -1172,6 +1173,8 @@ interface MapViewProps {
   ) => void;
   mode: string;
   flyingRestStops?: FlyingRestStop[];
+  xutionBuildings?: XutionBuilding[];
+  showXutionBuildings?: boolean;
 }
 
 export function MapView({
@@ -1183,6 +1186,8 @@ export function MapView({
   onMapReady,
   onMapClick,
   flyingRestStops = [],
+  xutionBuildings = [],
+  showXutionBuildings = false,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -1198,6 +1203,7 @@ export function MapView({
   const warningPopupRef = useRef<maplibregl.Popup | null>(null);
   const restStopPopupRef = useRef<maplibregl.Popup | null>(null);
   const countryBordersLoadedRef = useRef(false);
+  const xutionBuildingMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   onMapReadyRef.current = onMapReady;
   onMapClickRef.current = onMapClick;
@@ -1921,6 +1927,60 @@ export function MapView({
       );
     }
   }, [flyingRestStops]);
+
+  // Update Xution Building markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+
+    // Remove existing xution markers
+    for (const m of xutionBuildingMarkersRef.current) m.remove();
+    xutionBuildingMarkersRef.current = [];
+
+    if (!showXutionBuildings) return;
+
+    for (const building of xutionBuildings) {
+      const el = document.createElement("div");
+      el.style.cssText = [
+        "width: 22px",
+        "height: 22px",
+        "background: #1A1819",
+        "border: 2px solid #D4AF37",
+        "border-radius: 2px",
+        "display: flex",
+        "align-items: center",
+        "justify-content: center",
+        "font-size: 13px",
+        "cursor: pointer",
+        "box-shadow: 0 0 8px rgba(212,175,55,0.5)",
+      ].join("; ");
+      el.textContent = "\u{1F3DB}";
+
+      const notesHtml = building.notes
+        ? `<div style="color:#E7E7EA;margin-bottom:4px;font-size:11px;">${building.notes}</div>`
+        : "";
+
+      const popup = new maplibregl.Popup({
+        closeButton: true,
+        offset: 12,
+        maxWidth: "220px",
+      }).setHTML(
+        `<div style="background:#0e0e0f;color:#E7E7EA;padding:10px 12px;font-family:monospace;font-size:12px;border:1px solid #D4AF37;min-width:180px;">
+            <div style="color:#D4AF37;font-weight:bold;margin-bottom:4px;font-size:11px;letter-spacing:0.1em;">\u{1F3DB} ${building.name}</div>
+            <div style="color:#A7A7AD;font-size:10px;margin-bottom:4px;">${building.category}</div>
+            ${notesHtml}
+            <div style="color:#A7A7AD;font-size:10px;font-family:monospace;">${building.lat.toFixed(5)}, ${building.lng.toFixed(5)}</div>
+          </div>`,
+      );
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([building.lng, building.lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      xutionBuildingMarkersRef.current.push(marker);
+    }
+  }, [xutionBuildings, showXutionBuildings]);
 
   // Update dynamic overlay layers
   useEffect(() => {

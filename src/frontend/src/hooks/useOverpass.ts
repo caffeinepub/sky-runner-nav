@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { OverpassNode } from "../types";
+import { getCachedOverlay, setCachedOverlay } from "../utils/overlayCache";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 
@@ -9,9 +10,16 @@ export function useOverpass() {
 
   const fetchNodes = useCallback(
     async (
+      overlayId: string,
       query: string,
       bbox: [number, number, number, number],
     ): Promise<OverpassNode[]> => {
+      // Check cache first — if we have results for this area, return them immediately
+      const cached = getCachedOverlay(overlayId, bbox);
+      if (cached !== null) {
+        return cached;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -35,6 +43,10 @@ export function useOverpass() {
           .filter(
             (el: OverpassNode) => el.lat !== undefined && el.lon !== undefined,
           );
+
+        // Cache the results for offline use
+        setCachedOverlay(overlayId, bbox, elements);
+
         return elements;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Unknown error");

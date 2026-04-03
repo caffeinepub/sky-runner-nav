@@ -1,5 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Building2,
   ChevronLeft,
   ChevronRight,
   GripVertical,
@@ -7,6 +8,7 @@ import {
   Plus,
   Search,
   Settings2,
+  Trash2,
   TreePine,
   X,
 } from "lucide-react";
@@ -19,8 +21,10 @@ import type {
   SpeedLimit,
   TravelMode,
   Waypoint,
+  XutionBuilding,
 } from "../types";
 import { Checklist } from "./Checklist";
+import { OfflineSearch } from "./OfflineSearch";
 import { OverlayControls } from "./OverlayControls";
 import { SavedPlaces } from "./SavedPlaces";
 
@@ -30,6 +34,15 @@ interface NominatimResult {
   lat: string;
   lon: string;
 }
+
+const XUTION_CATEGORIES = [
+  "Office",
+  "Shelter",
+  "Hub",
+  "Supply Depot",
+  "HQ",
+  "Other",
+];
 
 interface SidebarProps {
   collapsed: boolean;
@@ -58,6 +71,10 @@ interface SidebarProps {
   navigationActive: boolean;
   onGoPress: () => void;
   onStopPress: () => void;
+  // Xution Buildings
+  xutionBuildings: XutionBuilding[];
+  onAddXutionBuilding: (b: Omit<XutionBuilding, "id" | "createdAt">) => void;
+  onDeleteXutionBuilding: (id: string) => void;
 }
 
 function formatDistance(meters: number): string {
@@ -99,6 +116,9 @@ export function Sidebar({
   navigationActive,
   onGoPress,
   onStopPress,
+  xutionBuildings,
+  onAddXutionBuilding,
+  onDeleteXutionBuilding,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
@@ -106,6 +126,14 @@ export function Sidebar({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Xution Building form state
+  const [xbName, setXbName] = useState("");
+  const [xbCategory, setXbCategory] = useState(XUTION_CATEGORIES[0]);
+  const [xbNotes, setXbNotes] = useState("");
+  const [xbLat, setXbLat] = useState("");
+  const [xbLng, setXbLng] = useState("");
+  const [xbFormOpen, setXbFormOpen] = useState(false);
 
   const searchAddress = async (query: string) => {
     if (!query.trim()) {
@@ -174,6 +202,39 @@ export function Sidebar({
     setDragOverIndex(null);
   };
 
+  const handleAddOfflineWaypoint = (lat: number, lng: number, name: string) => {
+    const wp: Waypoint = { id: `wp-${Date.now()}`, name, lat, lng };
+    onWaypointsChange([...waypoints, wp]);
+    onFlyTo(lat, lng);
+  };
+
+  const handleAddXbBuilding = () => {
+    const lat = Number.parseFloat(xbLat);
+    const lng = Number.parseFloat(xbLng);
+    if (!xbName.trim() || Number.isNaN(lat) || Number.isNaN(lng)) return;
+    onAddXutionBuilding({
+      name: xbName.trim(),
+      category: xbCategory,
+      lat,
+      lng,
+      notes: xbNotes.trim(),
+    });
+    setXbName("");
+    setXbNotes("");
+    setXbLat("");
+    setXbLng("");
+    setXbFormOpen(false);
+  };
+
+  // Pre-fill coords from map click
+  const openXbForm = () => {
+    if (pendingMapClick && !xbLat && !xbLng) {
+      setXbLat(pendingMapClick.lat.toFixed(5));
+      setXbLng(pendingMapClick.lng.toFixed(5));
+    }
+    setXbFormOpen(true);
+  };
+
   const restStopLabel =
     restStopFrequency === null
       ? null
@@ -184,6 +245,11 @@ export function Sidebar({
           : `Every ${restStopFrequency}h`;
 
   const canNavigate = waypoints.length >= 2;
+
+  const xbFormValid =
+    xbName.trim().length > 0 &&
+    !Number.isNaN(Number.parseFloat(xbLat)) &&
+    !Number.isNaN(Number.parseFloat(xbLng));
 
   return (
     <aside
@@ -324,7 +390,7 @@ export function Sidebar({
                 </div>
               )}
 
-              {/* Search */}
+              {/* Search (Online - Nominatim) */}
               <div className="space-y-1">
                 <div className="flex gap-1">
                   <div className="relative flex-1">
@@ -365,6 +431,15 @@ export function Sidebar({
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Offline Search */}
+              <div className="space-y-1 border-t border-[#2F2F34] pt-3">
+                <OfflineSearch
+                  onFlyTo={onFlyTo}
+                  onAddAsWaypoint={handleAddOfflineWaypoint}
+                  xutionBuildings={xutionBuildings}
+                />
               </div>
 
               {/* Route Info */}
@@ -625,6 +700,177 @@ export function Sidebar({
                   onAddAsWaypoint={onAddSavedAsWaypoint}
                   onFlyTo={onFlyTo}
                 />
+              </div>
+
+              {/* Xution Buildings */}
+              <div className="space-y-2 border-t border-[#2F2F34] pt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 size={10} className="text-[#D4AF37]" />
+                    <p className="text-[10px] text-[#D4AF37] tracking-wider font-bold">
+                      XUTION BUILDINGS
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      xbFormOpen ? setXbFormOpen(false) : openXbForm()
+                    }
+                    className="flex items-center gap-1 px-2 py-1 border border-[#D4AF37]/40 text-[#D4AF37] text-[10px] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] transition-colors"
+                    data-ocid="xution_buildings.open_modal_button"
+                  >
+                    {xbFormOpen ? <X size={10} /> : <Plus size={10} />}
+                    <span>{xbFormOpen ? "CANCEL" : "ADD"}</span>
+                  </button>
+                </div>
+
+                {/* Add Building Form */}
+                {xbFormOpen && (
+                  <div
+                    className="bg-[#0e0e0f] border border-[#D4AF37]/30 p-2 space-y-2"
+                    data-ocid="xution_buildings.panel"
+                  >
+                    <p className="text-[10px] text-[#D4AF37] tracking-wider font-bold">
+                      NEW XUTION BUILDING
+                    </p>
+
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        value={xbName}
+                        onChange={(e) => setXbName(e.target.value)}
+                        placeholder="Building name *"
+                        className="w-full bg-[#1A1819] border border-[#2F2F34] text-[#E7E7EA] text-xs px-2 py-1.5 font-mono placeholder-[#A7A7AD] focus:outline-none focus:border-[#D4AF37]/60 transition-colors"
+                        data-ocid="xution_buildings.input"
+                      />
+
+                      <select
+                        value={xbCategory}
+                        onChange={(e) => setXbCategory(e.target.value)}
+                        className="w-full bg-[#1A1819] border border-[#2F2F34] text-[#E7E7EA] text-xs px-2 py-1.5 font-mono focus:outline-none focus:border-[#D4AF37]/60 transition-colors"
+                        data-ocid="xution_buildings.select"
+                      >
+                        {XUTION_CATEGORIES.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={xbLat}
+                          onChange={(e) => setXbLat(e.target.value)}
+                          placeholder="Latitude *"
+                          className="flex-1 bg-[#1A1819] border border-[#2F2F34] text-[#E7E7EA] text-xs px-2 py-1.5 font-mono placeholder-[#A7A7AD] focus:outline-none focus:border-[#D4AF37]/60 transition-colors"
+                          data-ocid="xution_buildings.input"
+                        />
+                        <input
+                          type="text"
+                          value={xbLng}
+                          onChange={(e) => setXbLng(e.target.value)}
+                          placeholder="Longitude *"
+                          className="flex-1 bg-[#1A1819] border border-[#2F2F34] text-[#E7E7EA] text-xs px-2 py-1.5 font-mono placeholder-[#A7A7AD] focus:outline-none focus:border-[#D4AF37]/60 transition-colors"
+                          data-ocid="xution_buildings.input"
+                        />
+                      </div>
+
+                      {pendingMapClick && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setXbLat(pendingMapClick.lat.toFixed(5));
+                            setXbLng(pendingMapClick.lng.toFixed(5));
+                          }}
+                          className="w-full py-1 border border-dashed border-[#D4AF37]/40 text-[#D4AF37]/70 text-[10px] hover:border-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors"
+                        >
+                          USE MAP CLICK COORDINATES
+                        </button>
+                      )}
+
+                      <textarea
+                        value={xbNotes}
+                        onChange={(e) => setXbNotes(e.target.value)}
+                        placeholder="Notes (optional)"
+                        rows={2}
+                        className="w-full bg-[#1A1819] border border-[#2F2F34] text-[#E7E7EA] text-xs px-2 py-1.5 font-mono placeholder-[#A7A7AD] focus:outline-none focus:border-[#D4AF37]/60 transition-colors resize-none"
+                        data-ocid="xution_buildings.textarea"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={handleAddXbBuilding}
+                        disabled={!xbFormValid}
+                        className="w-full py-2 font-bold text-[10px] tracking-wider uppercase transition-all border disabled:opacity-30 disabled:cursor-not-allowed disabled:border-[#2F2F34] disabled:text-[#A7A7AD] disabled:bg-transparent enabled:bg-[#D4AF37] enabled:text-[#020202] enabled:border-[#D4AF37] enabled:hover:bg-[#c49f2f]"
+                        data-ocid="xution_buildings.submit_button"
+                      >
+                        ADD BUILDING
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Buildings list */}
+                {xutionBuildings.length === 0 && !xbFormOpen && (
+                  <p
+                    className="text-xs text-[#A7A7AD] py-1"
+                    data-ocid="xution_buildings.empty_state"
+                  >
+                    No Xution buildings added yet.
+                  </p>
+                )}
+
+                <div className="space-y-1">
+                  {xutionBuildings.map((b, index) => (
+                    <div
+                      key={b.id}
+                      className="flex items-start gap-2 p-2 bg-[#0e0e0f] border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors"
+                      data-ocid={`xution_buildings.item.${index + 1}`}
+                    >
+                      <Building2
+                        size={12}
+                        className="text-[#D4AF37]/70 flex-shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-[#E7E7EA] font-bold truncate">
+                          {b.name}
+                        </p>
+                        <p className="text-[10px] text-[#A7A7AD]">
+                          {b.category} ·{" "}
+                          <span className="font-mono">
+                            {b.lat.toFixed(3)},{b.lng.toFixed(3)}
+                          </span>
+                        </p>
+                        {b.notes && (
+                          <p className="text-[10px] text-[#A7A7AD] truncate mt-0.5">
+                            {b.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => onFlyTo(b.lat, b.lng)}
+                          className="text-[10px] text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors px-1"
+                          title="Fly to"
+                          data-ocid={`xution_buildings.edit_button.${index + 1}`}
+                        >
+                          ↗
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteXutionBuilding(b.id)}
+                          className="text-[10px] text-[#A7A7AD] hover:text-red-400 transition-colors px-1"
+                          title="Delete"
+                          data-ocid={`xution_buildings.delete_button.${index + 1}`}
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </ScrollArea>
