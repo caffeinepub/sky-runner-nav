@@ -21,6 +21,9 @@ const CHECKLIST_DATA: Record<TravelMode, ChecklistItem[]> = {
     { id: "d15", label: "Have headphones", checked: false },
     { id: "d16", label: "Have phone charger", checked: false },
     { id: "d17", label: "Have portable battery/car jumper", checked: false },
+    { id: "d18", label: "Have portable laundry solution", checked: false },
+    { id: "d19", label: "Have portable shower/wipes", checked: false },
+    { id: "d20", label: "Have travel toothbrush & toothpaste", checked: false },
   ],
   flying: [
     { id: "f1", label: "Check flight path and route", checked: false },
@@ -38,6 +41,10 @@ const CHECKLIST_DATA: Record<TravelMode, ChecklistItem[]> = {
     { id: "f13", label: "Set rest stop frequency", checked: false },
     { id: "f14", label: "Identify forest rest areas on route", checked: false },
     { id: "f15", label: "Emergency landing zones noted", checked: false },
+    { id: "f16", label: "Have med kit", checked: false },
+    { id: "f17", label: "Have portable laundry solution", checked: false },
+    { id: "f18", label: "Have portable shower/wipes", checked: false },
+    { id: "f19", label: "Have travel toothbrush & toothpaste", checked: false },
   ],
   teleport: [
     { id: "t1", label: "Verify destination coordinates", checked: false },
@@ -57,6 +64,9 @@ const CHECKLIST_DATA: Record<TravelMode, ChecklistItem[]> = {
     { id: "t15", label: "Notify arrival team", checked: false },
     { id: "t16", label: "Emergency protocol armed", checked: false },
     { id: "t17", label: "Execute teleport sequence", checked: false },
+    { id: "t18", label: "Have portable laundry solution", checked: false },
+    { id: "t19", label: "Have portable shower/wipes", checked: false },
+    { id: "t20", label: "Have travel toothbrush & toothpaste", checked: false },
   ],
 };
 
