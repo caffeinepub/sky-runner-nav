@@ -198,7 +198,7 @@ export function Sidebar({
             </button>
           </div>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-3 space-y-4">
               {/* Current Location */}
               {position && (

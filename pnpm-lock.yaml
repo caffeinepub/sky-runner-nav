@@ -125,6 +125,9 @@ importers:
       '@tanstack/react-router':
         specifier: ~1.131.8
         version: 1.131.50(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@types/maplibre-gl':
+        specifier: ^1.14.0
+        version: 1.14.0
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -798,8 +801,8 @@ packages:
   '@maplibre/geojson-vt@6.0.4':
     resolution: {integrity: sha512-HYv3POhMRCdhP3UPPATM/hfcy6/WuVIf5FKboH8u/ZuFMTnAIcSVlq5nfOqroLokd925w2QtE7YwquFOIacwVQ==}
 
-  '@maplibre/maplibre-gl-style-spec@24.7.0':
-    resolution: {integrity: sha512-Ed7rcKYU5iELfablg9Mj+TVCsXsPBgdMyXPRAxb2v7oWg9YJnpQdZ5msDs1LESu/mtXy3Z48Vdppv2t/x5kAhw==}
+  '@maplibre/maplibre-gl-style-spec@24.8.0':
+    resolution: {integrity: sha512-jDdUAW2rZXq+WZgRfMuhplNw166xf4zymK0cxr9qlYlef7CLQz3cb8Nn47DOgKmxlwv/UCHHieVdgg+dSuW3gg==}
     hasBin: true
 
   '@maplibre/mlt@1.1.8':
@@ -1728,6 +1731,10 @@ packages:
 
   '@types/js-cookie@2.2.7':
     resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==}
+
+  '@types/maplibre-gl@1.14.0':
+    resolution: {integrity: sha512-I6ibscT7UdL1oOqqCz9s1gjcolLaUPkHIIfMLusczTvlsMhjORyS6sE1g4V/NESAOL5KhNQX3/31LJH+OCGjkg==}
+    deprecated: This is a stub types definition. maplibre-gl provides its own type definitions, so you do not need this installed.
 
   '@types/node@20.19.24':
     resolution: {integrity: sha512-FE5u0ezmi6y9OZEzlJfg37mqqf6ZDSF2V/NLjUyGrR9uTZ7Sb9F7bLNZ03S4XVUNRWGA7Ck4c1kK+YnuWjl+DA==}
@@ -3502,7 +3509,7 @@ snapshots:
     dependencies:
       kdbush: 4.0.2
 
-  '@maplibre/maplibre-gl-style-spec@24.7.0':
+  '@maplibre/maplibre-gl-style-spec@24.8.0':
     dependencies:
       '@mapbox/jsonlint-lines-primitives': 2.0.2
       '@mapbox/unitbezier': 0.0.1
@@ -4464,6 +4471,10 @@ snapshots:
 
   '@types/js-cookie@2.2.7': {}
 
+  '@types/maplibre-gl@1.14.0':
+    dependencies:
+      maplibre-gl: 5.21.1
+
   '@types/node@20.19.24':
     dependencies:
       undici-types: 6.21.0
@@ -5021,7 +5032,7 @@ snapshots:
       '@mapbox/vector-tile': 2.0.4
       '@mapbox/whoots-js': 3.1.0
       '@maplibre/geojson-vt': 6.0.4
-      '@maplibre/maplibre-gl-style-spec': 24.7.0
+      '@maplibre/maplibre-gl-style-spec': 24.8.0
       '@maplibre/mlt': 1.1.8
       '@maplibre/vt-pbf': 4.3.0
       '@types/geojson': 7946.0.16
