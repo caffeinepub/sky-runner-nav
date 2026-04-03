@@ -338,11 +338,24 @@ export default function App() {
 
   // Calculate route when waypoints change
   useEffect(() => {
-    if (mode === "teleport" || waypoints.length < 2) {
+    if (mode === "teleport" || waypoints.length < 1) {
       setFlyingRestStops([]);
       return;
     }
-    calculateRoute(waypoints, mode).then(async (routeInfo) => {
+    // Always start from current GPS position if available
+    const routeWaypoints = position
+      ? [
+          {
+            id: "current-location",
+            name: "Current Location",
+            lat: position.lat,
+            lng: position.lng,
+          },
+          ...waypoints.filter((w) => w.id !== "current-location"),
+        ]
+      : waypoints;
+    if (routeWaypoints.length < 2) return;
+    calculateRoute(routeWaypoints, mode).then(async (routeInfo) => {
       if (!routeInfo) return;
 
       const map = mapInstanceRef.current;
@@ -381,13 +394,14 @@ export default function App() {
         restStopFrequency !== null &&
         restStopFrequency > 0
       ) {
-        computeFlyingRestStops(waypoints, restStopFrequency);
+        computeFlyingRestStops(routeWaypoints, restStopFrequency);
       } else if (mode !== "flying") {
         setFlyingRestStops([]);
       }
     });
   }, [
     waypoints,
+    position,
     mode,
     calculateRoute,
     fetchSpeedLimits,
