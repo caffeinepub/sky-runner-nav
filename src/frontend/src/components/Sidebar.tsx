@@ -6,11 +6,14 @@ import {
   MapPin,
   Plus,
   Search,
+  Settings2,
+  TreePine,
   X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { GeoPosition } from "../hooks/useGeolocation";
 import type {
+  FlyingRestStop,
   OverlayType,
   SavedDestinationLocal,
   SpeedLimit,
@@ -41,9 +44,20 @@ interface SidebarProps {
   speedLimits: SpeedLimit[];
   onFlyTo: (lat: number, lng: number) => void;
   onLoadDestination: (dest: SavedDestinationLocal) => void;
+  onAddSavedAsWaypoint: (dest: SavedDestinationLocal) => void;
   routeDistance: number | null;
   routeDuration: number | null;
   position: GeoPosition | null;
+  pendingMapClick: { lat: number; lng: number } | null;
+  onClearPendingMapClick: () => void;
+  onSetDestinationFromClick: (lat: number, lng: number) => void;
+  onAddWaypointFromClick: (lat: number, lng: number) => void;
+  flyingRestStops: FlyingRestStop[];
+  restStopFrequency: number | null;
+  onChangeRestStops: () => void;
+  navigationActive: boolean;
+  onGoPress: () => void;
+  onStopPress: () => void;
 }
 
 function formatDistance(meters: number): string {
@@ -71,9 +85,20 @@ export function Sidebar({
   speedLimits,
   onFlyTo,
   onLoadDestination,
+  onAddSavedAsWaypoint,
   routeDistance,
   routeDuration,
   position,
+  pendingMapClick,
+  onClearPendingMapClick,
+  onSetDestinationFromClick,
+  onAddWaypointFromClick,
+  flyingRestStops,
+  restStopFrequency,
+  onChangeRestStops,
+  navigationActive,
+  onGoPress,
+  onStopPress,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
@@ -149,6 +174,17 @@ export function Sidebar({
     setDragOverIndex(null);
   };
 
+  const restStopLabel =
+    restStopFrequency === null
+      ? null
+      : restStopFrequency === -1
+        ? "No stops"
+        : restStopFrequency < 1
+          ? `Every ${Math.round(restStopFrequency * 60)}min`
+          : `Every ${restStopFrequency}h`;
+
+  const canNavigate = waypoints.length >= 2;
+
   return (
     <aside
       className={`flex-shrink-0 bg-[#1A1819] border-r border-[#2F2F34] flex flex-col overflow-hidden transition-[width] duration-200 ${
@@ -176,7 +212,7 @@ export function Sidebar({
                 transform: "rotate(180deg)",
               }}
             >
-              SKY-RUNNER
+              XUTION
             </span>
           </div>
         </button>
@@ -228,6 +264,63 @@ export function Sidebar({
                   >
                     CENTER MAP HERE
                   </button>
+                </div>
+              )}
+
+              {/* Pending Map Click */}
+              {pendingMapClick && (
+                <div className="bg-[#0e0e0f] border border-[#D4AF37]/60 p-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin
+                        size={10}
+                        className="text-[#D4AF37] flex-shrink-0"
+                      />
+                      <p className="text-[10px] text-[#D4AF37] tracking-wider font-bold">
+                        MAP SELECTION
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onClearPendingMapClick}
+                      className="text-[#A7A7AD] hover:text-[#E7E7EA] transition-colors"
+                      title="Clear"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-[#E7E7EA] font-mono">
+                    {pendingMapClick.lat.toFixed(5)},{" "}
+                    {pendingMapClick.lng.toFixed(5)}
+                  </p>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onSetDestinationFromClick(
+                          pendingMapClick.lat,
+                          pendingMapClick.lng,
+                        )
+                      }
+                      className="flex-1 py-1.5 bg-[#D4AF37] text-[#020202] text-[10px] font-bold tracking-wider hover:bg-[#c49f2f] transition-colors"
+                      data-ocid="mapclick.set_destination_button"
+                    >
+                      SET DESTINATION
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onAddWaypointFromClick(
+                          pendingMapClick.lat,
+                          pendingMapClick.lng,
+                        )
+                      }
+                      className="flex-1 py-1.5 border border-[#D4AF37]/60 text-[#D4AF37] text-[10px] font-bold tracking-wider hover:bg-[#D4AF37]/10 transition-colors"
+                      data-ocid="mapclick.add_waypoint_button"
+                    >
+                      ADD WAYPOINT
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -374,6 +467,108 @@ export function Sidebar({
                 )}
               </div>
 
+              {/* GO / STOP button */}
+              {mode !== "teleport" && (
+                <div>
+                  {navigationActive ? (
+                    <button
+                      type="button"
+                      onClick={onStopPress}
+                      className="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold tracking-[0.3em] uppercase transition-colors border border-red-500/60 shadow-[0_0_16px_rgba(220,38,38,0.3)]"
+                      data-ocid="navigation.stop_button"
+                    >
+                      ■ STOP
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onGoPress}
+                      disabled={!canNavigate}
+                      className="w-full py-3 font-bold tracking-[0.3em] uppercase text-sm transition-all border
+                        disabled:opacity-30 disabled:cursor-not-allowed disabled:border-[#2F2F34] disabled:text-[#A7A7AD] disabled:bg-transparent
+                        enabled:bg-[#D4AF37] enabled:text-[#020202] enabled:border-[#D4AF37] enabled:hover:bg-[#c49f2f] enabled:hover:border-[#c49f2f] enabled:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                      data-ocid="navigation.primary_button"
+                    >
+                      ▶ GO
+                    </button>
+                  )}
+                  {!canNavigate && !navigationActive && (
+                    <p className="text-[10px] text-[#A7A7AD] text-center mt-1">
+                      Add 2+ waypoints to enable
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Flying mode: rest stop config */}
+              {mode === "flying" && (
+                <div className="bg-[#0e0e0f] border border-[#2d7a2d]/60 p-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <TreePine
+                        size={10}
+                        className="text-[#2d7a2d] flex-shrink-0"
+                      />
+                      <p className="text-[10px] text-[#2d7a2d] tracking-wider font-bold">
+                        REST STOPS
+                      </p>
+                    </div>
+                    {restStopLabel && (
+                      <span className="text-[10px] text-[#A7A7AD]">
+                        {restStopLabel}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onChangeRestStops}
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-[#2d7a2d]/50 text-[#2d7a2d] text-[10px] hover:bg-[#2d7a2d]/10 hover:border-[#2d7a2d] transition-colors tracking-wider"
+                    data-ocid="flying.rest_stops.button"
+                  >
+                    <Settings2 size={10} />
+                    CHANGE REST STOPS
+                  </button>
+                </div>
+              )}
+
+              {/* Forest Rest Stops list */}
+              {mode === "flying" && flyingRestStops.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-[#D4AF37] tracking-wider font-bold">
+                    FOREST REST STOPS
+                  </p>
+                  <div className="space-y-1">
+                    {flyingRestStops.map((stop, index) => (
+                      <div
+                        key={stop.id}
+                        className="flex items-start gap-2 p-2 bg-[#0e0e0f] border border-[#2d7a2d]/40"
+                        data-ocid={`rest_stops.item.${index + 1}`}
+                      >
+                        <span className="text-sm flex-shrink-0 mt-0.5">🌲</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-[#E7E7EA] break-words">
+                            {stop.name}
+                          </p>
+                          <p className="text-[10px] text-[#A7A7AD] mt-0.5">
+                            Stop {index + 1} ·{" "}
+                            {stop.isForest ? "Forest" : "Park/Green Area"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onFlyTo(stop.lat, stop.lng)}
+                          className="text-[10px] text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors flex-shrink-0 mt-0.5 px-1"
+                          title="View on map"
+                          data-ocid={`rest_stops.view_button.${index + 1}`}
+                        >
+                          ↗
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Speed Limits - Driving only */}
               {mode === "driving" && speedLimits.length > 0 && (
                 <div className="space-y-1">
@@ -427,6 +622,7 @@ export function Sidebar({
                 <SavedPlaces
                   waypoints={waypoints}
                   onLoadDestination={onLoadDestination}
+                  onAddAsWaypoint={onAddSavedAsWaypoint}
                   onFlyTo={onFlyTo}
                 />
               </div>

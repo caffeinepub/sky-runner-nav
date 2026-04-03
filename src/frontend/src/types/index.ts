@@ -50,3 +50,11 @@ export interface ChecklistItem {
   label: string;
   checked: boolean;
 }
+
+export interface FlyingRestStop {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  isForest: boolean;
+}

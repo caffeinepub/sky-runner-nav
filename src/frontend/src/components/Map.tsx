@@ -2,7 +2,12 @@ import maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import type { GeoPosition } from "../hooks/useGeolocation";
-import type { OverlayType, OverpassNode, Waypoint } from "../types";
+import type {
+  FlyingRestStop,
+  OverlayType,
+  OverpassNode,
+  Waypoint,
+} from "../types";
 
 const FOREST_LABELS = [
   { name: "Amazon Rainforest", lng: -60.0, lat: -3.0 },
@@ -134,6 +139,209 @@ export const AIRPORT_WARNING_ZONES = [
   { name: "Fort Bragg", lat: 35.1396, lng: -79.0063 },
   { name: "Naval Station Norfolk", lat: 36.9365, lng: -76.3212 },
   { name: "Andrews AFB", lat: 38.8108, lng: -76.8667 },
+  // Europe
+  { name: "Amsterdam Schiphol", lat: 52.3086, lng: 4.7639 },
+  { name: "Madrid Barajas", lat: 40.4983, lng: -3.5676 },
+  { name: "Rome Fiumicino", lat: 41.8003, lng: 12.2389 },
+  { name: "Barcelona El Prat", lat: 41.2974, lng: 2.0833 },
+  { name: "Munich Intl", lat: 48.3538, lng: 11.7861 },
+  { name: "Zurich Intl", lat: 47.4647, lng: 8.5492 },
+  { name: "Vienna Intl", lat: 48.1103, lng: 16.5697 },
+  { name: "Brussels Zaventem", lat: 50.901, lng: 4.4844 },
+  { name: "Copenhagen Kastrup", lat: 55.618, lng: 12.6561 },
+  { name: "Stockholm Arlanda", lat: 59.6519, lng: 17.9186 },
+  { name: "Oslo Gardermoen", lat: 60.1939, lng: 11.1004 },
+  { name: "Helsinki Vantaa", lat: 60.3172, lng: 24.9633 },
+  { name: "Warsaw Chopin", lat: 52.1657, lng: 20.9671 },
+  { name: "Prague Vaclav Havel", lat: 50.1008, lng: 14.26 },
+  { name: "Budapest Ferenc Liszt", lat: 47.4369, lng: 19.2556 },
+  { name: "Lisbon Humberto Delgado", lat: 38.7813, lng: -9.1359 },
+  { name: "Dublin Intl", lat: 53.4213, lng: -6.27 },
+  { name: "Athens Eleftherios Venizelos", lat: 37.9364, lng: 23.9445 },
+  { name: "Istanbul Ataturk", lat: 40.9769, lng: 28.8146 },
+  { name: "Istanbul Airport (New)", lat: 41.2753, lng: 28.7519 },
+  { name: "Moscow Sheremetyevo", lat: 55.9726, lng: 37.4146 },
+  { name: "Moscow Domodedovo", lat: 55.4088, lng: 37.9063 },
+  { name: "St Petersburg Pulkovo", lat: 59.8003, lng: 30.2625 },
+  { name: "Kiev Boryspil", lat: 50.345, lng: 30.8947 },
+  { name: "Minsk Natl", lat: 53.8825, lng: 28.0322 },
+  { name: "Bucharest Henri Coanda", lat: 44.5711, lng: 26.085 },
+  { name: "Sofia Intl", lat: 42.6952, lng: 23.4114 },
+  { name: "Belgrade Nikola Tesla", lat: 44.8184, lng: 20.3091 },
+  { name: "Zagreb Intl", lat: 45.7429, lng: 16.0688 },
+  { name: "Ramstein Air Base (US Military)", lat: 49.4369, lng: 7.6003 },
+  { name: "NATO HQ / Restricted (Brussels)", lat: 50.8793, lng: 4.4183 },
+  { name: "London City Airport", lat: 51.5033, lng: 0.0552 },
+  { name: "Edinburgh Airport", lat: 55.9508, lng: -3.3725 },
+  { name: "Manchester Airport", lat: 53.3537, lng: -2.275 },
+  { name: "Paris Orly", lat: 48.7233, lng: 2.3794 },
+  { name: "Lyon Saint-Exupery", lat: 45.7256, lng: 5.0811 },
+  { name: "Nice Cote d'Azur", lat: 43.6584, lng: 7.2159 },
+  { name: "Dusseldorf Intl", lat: 51.2895, lng: 6.7668 },
+  { name: "Hamburg Airport", lat: 53.6304, lng: 9.9882 },
+  { name: "Stuttgart Airport", lat: 48.69, lng: 9.222 },
+  { name: "Palma de Mallorca", lat: 39.5517, lng: 2.7388 },
+  // Asia-Pacific
+  { name: "Tokyo Narita (NRT)", lat: 35.772, lng: 140.3929 },
+  { name: "Tokyo Haneda (HND)", lat: 35.5494, lng: 139.7803 },
+  { name: "Seoul Incheon", lat: 37.4691, lng: 126.451 },
+  { name: "Beijing Capital", lat: 40.0801, lng: 116.5977 },
+  { name: "Beijing Daxing", lat: 39.5098, lng: 116.4105 },
+  { name: "Shanghai Pudong", lat: 31.1443, lng: 121.8083 },
+  { name: "Shanghai Hongqiao", lat: 31.1979, lng: 121.3363 },
+  { name: "Hong Kong Intl", lat: 22.308, lng: 113.9185 },
+  { name: "Singapore Changi", lat: 1.3644, lng: 103.9915 },
+  { name: "Kuala Lumpur Intl", lat: 2.7456, lng: 101.7072 },
+  { name: "Bangkok Suvarnabhumi", lat: 13.69, lng: 100.7501 },
+  { name: "Manila Ninoy Aquino", lat: 14.5086, lng: 121.0197 },
+  { name: "Jakarta Soekarno-Hatta", lat: -6.1256, lng: 106.6559 },
+  { name: "Sydney Kingsford Smith", lat: -33.9399, lng: 151.1772 },
+  { name: "Melbourne Tullamarine", lat: -37.669, lng: 144.841 },
+  { name: "Brisbane Intl", lat: -27.3842, lng: 153.1175 },
+  { name: "Perth Intl", lat: -31.9403, lng: 115.9672 },
+  { name: "Auckland Intl", lat: -37.0082, lng: 174.785 },
+  { name: "Mumbai Chhatrapati Shivaji", lat: 19.0896, lng: 72.8656 },
+  { name: "Delhi Indira Gandhi", lat: 28.5562, lng: 77.1 },
+  { name: "Kolkata Netaji Subhas", lat: 22.652, lng: 88.4463 },
+  { name: "Chennai Intl", lat: 12.99, lng: 80.1693 },
+  { name: "Bengaluru Kempegowda", lat: 13.1979, lng: 77.7063 },
+  { name: "Hyderabad Rajiv Gandhi", lat: 17.2403, lng: 78.4294 },
+  { name: "Karachi Jinnah Intl", lat: 24.9065, lng: 67.1608 },
+  { name: "Lahore Allama Iqbal", lat: 31.5216, lng: 74.4036 },
+  { name: "Islamabad New Intl", lat: 33.5487, lng: 72.8364 },
+  { name: "Dhaka Hazrat Shahjalal", lat: 23.8433, lng: 90.3978 },
+  { name: "Colombo Bandaranaike", lat: 7.1808, lng: 79.8841 },
+  { name: "Kathmandu Tribhuvan", lat: 27.6966, lng: 85.3591 },
+  { name: "Rangoon Mingaladon", lat: 16.9023, lng: 96.1332 },
+  { name: "Phnom Penh Pochentong", lat: 11.5466, lng: 104.844 },
+  { name: "Ho Chi Minh City Tan Son Nhat", lat: 10.8188, lng: 106.652 },
+  { name: "Hanoi Noi Bai", lat: 21.2212, lng: 105.8072 },
+  { name: "Taipei Taoyuan", lat: 25.0777, lng: 121.233 },
+  { name: "Osaka Kansai", lat: 34.4273, lng: 135.244 },
+  { name: "Nagoya Chubu Centrair", lat: 34.8583, lng: 136.805 },
+  { name: "Fukuoka Airport", lat: 33.5858, lng: 130.4511 },
+  { name: "Kadena Air Base (US Military)", lat: 26.3558, lng: 127.7681 },
+  { name: "Camp Humphreys (US Military)", lat: 36.9719, lng: 126.9869 },
+  { name: "Andersen AFB Guam (US Military)", lat: 13.5836, lng: 144.9296 },
+  { name: "Diego Garcia (US Military Base)", lat: -7.3133, lng: 72.4108 },
+  { name: "North Korea Restricted Airspace", lat: 39.0, lng: 125.75 },
+  { name: "Kabul Hamid Karzai", lat: 34.5658, lng: 69.2123 },
+  { name: "Bagram Air Base (US Military)", lat: 34.9461, lng: 69.2647 },
+  // Middle East
+  { name: "Dubai Intl (DXB)", lat: 25.2532, lng: 55.3644 },
+  { name: "Dubai Al Maktoum (DWC)", lat: 24.8963, lng: 55.1613 },
+  { name: "Abu Dhabi Intl", lat: 24.433, lng: 54.6511 },
+  { name: "Doha Hamad Intl", lat: 25.2731, lng: 51.6081 },
+  { name: "Kuwait Intl", lat: 29.2267, lng: 47.9689 },
+  { name: "Bahrain Intl", lat: 26.2708, lng: 50.6336 },
+  { name: "Muscat Intl", lat: 23.5933, lng: 58.2844 },
+  { name: "Riyadh King Khalid", lat: 24.9578, lng: 46.6988 },
+  { name: "Jeddah King Abdulaziz", lat: 21.6796, lng: 39.1565 },
+  { name: "Tel Aviv Ben Gurion", lat: 31.9965, lng: 34.8854 },
+  { name: "Amman Queen Alia", lat: 31.7226, lng: 35.9932 },
+  { name: "Beirut Rafic Hariri", lat: 33.8208, lng: 35.4883 },
+  { name: "Baghdad Intl", lat: 33.2625, lng: 44.2346 },
+  { name: "Tehran Imam Khomeini", lat: 35.4161, lng: 51.1522 },
+  { name: "Ankara Esenboga", lat: 40.1281, lng: 32.9951 },
+  { name: "Mecca Restricted Zone (No-Go)", lat: 21.4225, lng: 39.8262 },
+  // Africa
+  { name: "Cairo Intl", lat: 30.1219, lng: 31.4056 },
+  { name: "Johannesburg OR Tambo", lat: -26.1367, lng: 28.2411 },
+  { name: "Cape Town Intl", lat: -33.9649, lng: 18.6017 },
+  { name: "Lagos Murtala Muhammed", lat: 6.5774, lng: 3.3214 },
+  { name: "Nairobi Jomo Kenyatta", lat: -1.3192, lng: 36.9275 },
+  { name: "Addis Ababa Bole", lat: 8.9779, lng: 38.7993 },
+  { name: "Casablanca Mohammed V", lat: 33.3675, lng: -7.5897 },
+  { name: "Tunis Carthage", lat: 36.851, lng: 10.2272 },
+  { name: "Algiers Houari Boumediene", lat: 36.691, lng: 3.2154 },
+  { name: "Tripoli Mitiga", lat: 32.8941, lng: 13.276 },
+  { name: "Dar es Salaam Julius Nyerere", lat: -6.8781, lng: 39.2026 },
+  { name: "Accra Kotoka", lat: 5.6052, lng: -0.1668 },
+  { name: "Abidjan Felix Houphouet-Boigny", lat: 5.2613, lng: -3.9263 },
+  { name: "Dakar Leopold Sedar Senghor", lat: 14.7397, lng: -17.4902 },
+  { name: "Khartoum Intl", lat: 15.5895, lng: 32.5532 },
+  { name: "Camp Lemonnier (US Military)", lat: 11.5467, lng: 43.1597 },
+  { name: "Luanda Quatro de Fevereiro", lat: -8.8583, lng: 13.2312 },
+  { name: "Maputo Intl", lat: -25.9208, lng: 32.5726 },
+  { name: "Harare Intl", lat: -17.9318, lng: 31.0928 },
+  { name: "Entebbe Intl", lat: 0.0424, lng: 32.4435 },
+  { name: "Lusaka Kenneth Kaunda", lat: -15.3308, lng: 28.4526 },
+  // South America
+  { name: "Sao Paulo Guarulhos", lat: -23.4356, lng: -46.4731 },
+  { name: "Rio de Janeiro Galeao", lat: -22.8099, lng: -43.2505 },
+  { name: "Buenos Aires Ezeiza", lat: -34.8222, lng: -58.5358 },
+  { name: "Bogota El Dorado", lat: 4.7016, lng: -74.1469 },
+  { name: "Lima Jorge Chavez", lat: -12.0219, lng: -77.1143 },
+  { name: "Santiago Arturo Merino Benitez", lat: -33.393, lng: -70.7858 },
+  { name: "Caracas Simon Bolivar", lat: 10.6031, lng: -66.9914 },
+  { name: "Quito Mariscal Sucre", lat: -0.1292, lng: -78.3575 },
+  { name: "Guayaquil Jose Joaquin", lat: -2.1574, lng: -79.8836 },
+  { name: "Medellin Jose Marie Cordova", lat: 6.1655, lng: -75.4231 },
+  { name: "Asuncion Silvio Pettirossi", lat: -25.24, lng: -57.52 },
+  { name: "Montevideo Carrasco", lat: -34.8384, lng: -56.0308 },
+  { name: "La Paz El Alto", lat: -16.5133, lng: -68.1923 },
+  { name: "Brasilia Intl", lat: -15.8711, lng: -47.9186 },
+  { name: "Recife Guararapes", lat: -8.1265, lng: -34.9228 },
+  { name: "Porto Alegre Salgado Filho", lat: -29.9944, lng: -51.1714 },
+  { name: "Manaus Eduardo Gomes", lat: -3.0386, lng: -60.0497 },
+  // Central America & Caribbean
+  { name: "Mexico City Felipe Angeles", lat: 19.7459, lng: -99.0151 },
+  { name: "Monterrey Mariano Escobedo", lat: 25.7785, lng: -100.1069 },
+  { name: "Guadalajara Miguel Hidalgo", lat: 20.5218, lng: -103.3111 },
+  { name: "Guatemala City La Aurora", lat: 14.5833, lng: -90.5275 },
+  { name: "San Jose Juan Santamaria", lat: 9.9939, lng: -84.2088 },
+  { name: "Panama City Tocumen", lat: 9.0714, lng: -79.3835 },
+  { name: "Santo Domingo Las Americas", lat: 18.4297, lng: -69.6689 },
+  { name: "San Juan Luis Munoz Marin", lat: 18.4394, lng: -66.0018 },
+  { name: "Havana Jose Marti Intl", lat: 22.9892, lng: -82.4091 },
+  { name: "Guantanamo Bay (US Military)", lat: 19.9069, lng: -75.0988 },
+  { name: "Nassau Intl", lat: 25.0389, lng: -77.4662 },
+  { name: "Kingston Norman Manley", lat: 17.9357, lng: -76.7875 },
+  { name: "Port-au-Prince Toussaint", lat: 18.5799, lng: -72.2925 },
+  { name: "Cancun Intl", lat: 21.0365, lng: -86.8771 },
+  { name: "Punta Cana Intl", lat: 18.5674, lng: -68.3634 },
+  { name: "Montego Bay Sangster", lat: 18.5037, lng: -77.9135 },
+  { name: "Trinidad Port of Spain", lat: 10.5954, lng: -61.3372 },
+  { name: "Bridgetown Grantley Adams", lat: 13.0746, lng: -59.4925 },
+  { name: "Belize City Philip Goldson", lat: 17.5391, lng: -88.3082 },
+  { name: "Tegucigalpa Toncontin", lat: 14.0608, lng: -87.2172 },
+  { name: "Managua Augusto Sandino", lat: 12.1415, lng: -86.1682 },
+  { name: "San Salvador Monsenor Oscar Romero", lat: 13.4409, lng: -89.0557 },
+  // Restricted / Government Zones Worldwide
+  { name: "Vatican Restricted Airspace", lat: 41.9029, lng: 12.4534 },
+  { name: "Kremlin / Moscow Restricted Zone", lat: 55.752, lng: 37.6175 },
+  {
+    name: "Zhongnanhai Restricted Zone (Beijing)",
+    lat: 39.9219,
+    lng: 116.3813,
+  },
+  { name: "Pyongyang Restricted Zone (DPRK)", lat: 39.0194, lng: 125.7381 },
+  { name: "Riyadh Royal Restricted Zone", lat: 24.6877, lng: 46.7219 },
+  { name: "London Restricted Airspace (Royal)", lat: 51.5014, lng: -0.1419 },
+  { name: "Paris Restricted Airspace (Government)", lat: 48.8728, lng: 2.3162 },
+  { name: "US Naval Base Bahrain", lat: 26.234, lng: 50.5934 },
+  { name: "Pearl Harbor-Hickam (US Military)", lat: 21.3281, lng: -157.9396 },
+  { name: "Cheyenne Mountain NORAD Complex", lat: 38.7448, lng: -104.846 },
+  { name: "Wright-Patterson AFB", lat: 39.8261, lng: -84.0484 },
+  { name: "MacDill AFB (CENTCOM)", lat: 27.8492, lng: -82.5213 },
+  { name: "Edwards Air Force Base", lat: 34.9054, lng: -117.8839 },
+  { name: "Vandenberg Space Force Base", lat: 34.742, lng: -120.5724 },
+  { name: "Cape Canaveral Space Force Station", lat: 28.4889, lng: -80.5778 },
+  { name: "Nellis Air Force Base", lat: 36.2354, lng: -115.0341 },
+  { name: "Fairchild Air Force Base", lat: 47.6151, lng: -117.6557 },
+  { name: "Barksdale Air Force Base", lat: 32.5018, lng: -93.6627 },
+  { name: "Tinker Air Force Base", lat: 35.4147, lng: -97.3866 },
+  { name: "Minot Air Force Base (Nuclear)", lat: 48.4156, lng: -101.358 },
+  { name: "Malmstrom AFB (Nuclear)", lat: 47.5081, lng: -111.1878 },
+  { name: "F.E. Warren AFB (Nuclear)", lat: 41.1453, lng: -104.8527 },
+  { name: "Russian Northern Fleet HQ", lat: 69.0686, lng: 33.4169 },
+  { name: "Sevastopol Naval Base (Russia)", lat: 44.6166, lng: 33.5254 },
+  { name: "PLA Navy Yulin Base (China)", lat: 18.2552, lng: 109.7214 },
+  { name: "RAF Lakenheath (US Air Force UK)", lat: 52.4094, lng: 0.5606 },
+  { name: "RAF Mildenhall (US Air Force UK)", lat: 52.3619, lng: 0.4864 },
+  { name: "Incirlik Air Base (US/NATO)", lat: 37.0021, lng: 35.4259 },
+  { name: "Al Udeid Air Base (US Military)", lat: 25.1173, lng: 51.315 },
+  { name: "Ali Al Salem Air Base (US)", lat: 29.3467, lng: 47.52 },
 ];
 
 // Country border reference points — spaced ~60 miles apart along major borders
@@ -957,7 +1165,13 @@ interface MapViewProps {
   overlayData: Record<string, OverpassNode[]>;
   staticOverlays: { id: string; label: string; active: boolean }[];
   onMapReady: (map: MapLibreMap) => void;
+  onMapClick?: (
+    lat: number,
+    lng: number,
+    action: "destination" | "waypoint",
+  ) => void;
   mode: string;
+  flyingRestStops?: FlyingRestStop[];
 }
 
 export function MapView({
@@ -967,21 +1181,26 @@ export function MapView({
   overlayData,
   staticOverlays,
   onMapReady,
+  onMapClick,
+  flyingRestStops = [],
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const userMarkerRef = useRef<Marker | null>(null);
   const waypointMarkersRef = useRef<Marker[]>([]);
   const onMapReadyRef = useRef(onMapReady);
+  const onMapClickRef = useRef(onMapClick);
   const mapLoadedRef = useRef(false);
   const overlaysRef = useRef(overlays);
   const overlayDataRef = useRef(overlayData);
   const staticOverlaysRef = useRef(staticOverlays);
   const warnedZonesRef = useRef<Set<string>>(new Set());
   const warningPopupRef = useRef<maplibregl.Popup | null>(null);
+  const restStopPopupRef = useRef<maplibregl.Popup | null>(null);
   const countryBordersLoadedRef = useRef(false);
 
   onMapReadyRef.current = onMapReady;
+  onMapClickRef.current = onMapClick;
   overlaysRef.current = overlays;
   overlayDataRef.current = overlayData;
   staticOverlaysRef.current = staticOverlays;
@@ -1366,6 +1585,87 @@ export function MapView({
         countryBordersLoadedRef,
       );
 
+      // Map click: show context popup to set destination or add waypoint
+      const clickPopupRef: { current: maplibregl.Popup | null } = {
+        current: null,
+      };
+      map.on("click", (e) => {
+        // Don't fire if a feature layer was clicked
+        const features = map.queryRenderedFeatures(e.point);
+        const isFeatureClick = features.some((f) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const layerId: string | undefined = (f as any)?.layer?.id;
+          return (
+            layerId !== undefined &&
+            (layerId.includes("-circles") ||
+              layerId.includes("warning") ||
+              layerId.includes("plane") ||
+              layerId.includes("border"))
+          );
+        });
+        if (isFeatureClick) return;
+
+        const { lng, lat } = e.lngLat;
+
+        if (clickPopupRef.current) {
+          clickPopupRef.current.remove();
+          clickPopupRef.current = null;
+        }
+
+        const coordStr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        const popupHtml = `
+          <div style="background:#0e0e0f;color:#E7E7EA;padding:10px 12px;font-family:monospace;font-size:12px;border:1px solid #D4AF37;min-width:190px;">
+            <div style="color:#D4AF37;font-weight:bold;margin-bottom:8px;font-size:11px;letter-spacing:0.1em;">📍 ${coordStr}</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button id="btn-set-dest"
+                style="background:#D4AF37;color:#020202;border:none;padding:5px 10px;font-family:monospace;font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:0.05em;text-align:left;"
+                onmouseover="this.style.background='#f0c842'"
+                onmouseout="this.style.background='#D4AF37'">
+                ⬛ SET AS DESTINATION
+              </button>
+              <button id="btn-add-waypoint"
+                style="background:#1A1819;color:#D4AF37;border:1px solid #D4AF37;padding:5px 10px;font-family:monospace;font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:0.05em;text-align:left;"
+                onmouseover="this.style.background='#2a2828'"
+                onmouseout="this.style.background='#1A1819'">
+                ＋ ADD AS WAYPOINT
+              </button>
+            </div>
+          </div>`;
+
+        const popup = new maplibregl.Popup({
+          closeButton: true,
+          maxWidth: "240px",
+          className: "map-click-popup",
+        })
+          .setLngLat([lng, lat])
+          .setHTML(popupHtml)
+          .addTo(map);
+
+        clickPopupRef.current = popup as unknown as maplibregl.Popup;
+
+        // Bind button handlers after popup is added to DOM
+        setTimeout(() => {
+          const btnDest = document.getElementById("btn-set-dest");
+          const btnWp = document.getElementById("btn-add-waypoint");
+          if (btnDest) {
+            btnDest.onclick = () => {
+              if (onMapClickRef.current)
+                onMapClickRef.current(lat, lng, "destination");
+              popup.remove();
+              clickPopupRef.current = null;
+            };
+          }
+          if (btnWp) {
+            btnWp.onclick = () => {
+              if (onMapClickRef.current)
+                onMapClickRef.current(lat, lng, "waypoint");
+              popup.remove();
+              clickPopupRef.current = null;
+            };
+          }
+        }, 50);
+      });
+
       onMapReadyRef.current(map);
     });
 
@@ -1431,7 +1731,7 @@ export function MapView({
             </div>`,
           )
           .addTo(map);
-        warningPopupRef.current = popup;
+        warningPopupRef.current = popup as unknown as maplibregl.Popup;
       }
     };
 
@@ -1541,6 +1841,86 @@ export function MapView({
     if (!map || !mapLoadedRef.current) return;
     applyStaticOverlays(map, staticOverlays, countryBordersLoadedRef);
   }, [staticOverlays]);
+
+  // Update flying rest stop markers on map
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+
+    const SOURCE_ID = "flying-rest-stops";
+    const LAYER_ID = "rest-stop-markers";
+
+    const featureCollection = {
+      type: "FeatureCollection" as const,
+      features: flyingRestStops.map((stop) => ({
+        type: "Feature" as const,
+        properties: {
+          id: stop.id,
+          name: stop.name,
+          isForest: stop.isForest,
+        },
+        geometry: {
+          type: "Point" as const,
+          coordinates: [stop.lng, stop.lat],
+        },
+      })),
+    };
+
+    if (!map.getSource(SOURCE_ID)) {
+      map.addSource(SOURCE_ID, { type: "geojson", data: featureCollection });
+      map.addLayer({
+        id: LAYER_ID,
+        type: "circle",
+        source: SOURCE_ID,
+        paint: {
+          "circle-color": "#2d7a2d",
+          "circle-radius": 8,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#D4AF37",
+        },
+      });
+
+      // Hover popup
+      map.on("click", LAYER_ID, (e) => {
+        const features = e.features;
+        if (!features || features.length === 0) return;
+        const props = features[0].properties as {
+          name: string;
+          isForest: boolean;
+        };
+        const coords = (features[0].geometry as GeoJSON.Point).coordinates as [
+          number,
+          number,
+        ];
+
+        if (restStopPopupRef.current) restStopPopupRef.current.remove();
+        restStopPopupRef.current = new maplibregl.Popup({
+          closeButton: true,
+          maxWidth: "240px",
+        })
+          .setLngLat(coords)
+          .setHTML(
+            `<div style="background:#0e0e0f;color:#E7E7EA;padding:10px 12px;font-family:monospace;font-size:12px;border:1px solid #2d7a2d;">
+              <div style="font-weight:bold;color:#D4AF37;margin-bottom:4px;font-size:11px;letter-spacing:0.1em;">🌲 REST STOP</div>
+              <div style="color:#E7E7EA;">${props.name}</div>
+              <div style="color:#A7A7AD;font-size:10px;margin-top:4px;">${props.isForest ? "Forest" : "Park / Green Area"}</div>
+            </div>`,
+          )
+          .addTo(map) as unknown as maplibregl.Popup;
+      });
+
+      map.on("mouseenter", LAYER_ID, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", LAYER_ID, () => {
+        map.getCanvas().style.cursor = "";
+      });
+    } else {
+      (map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource).setData(
+        featureCollection,
+      );
+    }
+  }, [flyingRestStops]);
 
   // Update dynamic overlay layers
   useEffect(() => {

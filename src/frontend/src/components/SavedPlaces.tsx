@@ -1,16 +1,18 @@
-import { Download, MapPin, Save, Trash2 } from "lucide-react";
+import { Download, MapPin, Plus, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { SavedDestinationLocal, Waypoint } from "../types";
 
 interface SavedPlacesProps {
   waypoints: Waypoint[];
   onLoadDestination: (dest: SavedDestinationLocal) => void;
+  onAddAsWaypoint: (dest: SavedDestinationLocal) => void;
   onFlyTo: (lat: number, lng: number) => void;
 }
 
 export function SavedPlaces({
   waypoints,
   onLoadDestination,
+  onAddAsWaypoint,
   onFlyTo,
 }: SavedPlacesProps) {
   const [saveName, setSaveName] = useState("");
@@ -63,34 +65,52 @@ export function SavedPlaces({
       {saved.map((dest, index) => (
         <div
           key={dest.id}
-          className="flex items-center gap-2 p-2 bg-[#0e0e0f] border border-[#2F2F34] group"
+          className="p-2 bg-[#0e0e0f] border border-[#2F2F34] space-y-1.5"
           data-ocid={`saved.item.${index + 1}`}
         >
-          <MapPin size={12} className="text-[#D4AF37] flex-shrink-0" />
-          <span className="text-xs text-[#E7E7EA] flex-1 truncate">
-            {dest.name}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              onFlyTo(dest.lat, dest.lng);
-              onLoadDestination(dest);
-            }}
-            className="text-[#A7A7AD] hover:text-[#D4AF37] transition-colors p-0.5"
-            title="Load destination"
-            data-ocid={`saved.load.button.${index + 1}`}
-          >
-            <Download size={11} />
-          </button>
-          <button
-            type="button"
-            onClick={() => deletePlace(dest.id)}
-            className="text-[#A7A7AD] hover:text-red-400 transition-colors p-0.5"
-            title="Delete"
-            data-ocid={`saved.delete_button.${index + 1}`}
-          >
-            <Trash2 size={11} />
-          </button>
+          <div className="flex items-center gap-2">
+            <MapPin size={12} className="text-[#D4AF37] flex-shrink-0" />
+            <span className="text-xs text-[#E7E7EA] flex-1 truncate">
+              {dest.name}
+            </span>
+            <button
+              type="button"
+              onClick={() => deletePlace(dest.id)}
+              className="text-[#A7A7AD] hover:text-red-400 transition-colors p-0.5 flex-shrink-0"
+              title="Delete"
+              data-ocid={`saved.delete_button.${index + 1}`}
+            >
+              <Trash2 size={11} />
+            </button>
+          </div>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                onFlyTo(dest.lat, dest.lng);
+                onLoadDestination(dest);
+              }}
+              className="flex-1 flex items-center justify-center gap-1 py-1 bg-[#D4AF37] text-[#020202] text-[10px] font-bold hover:bg-[#c49f2f] transition-colors"
+              title="Load as full route"
+              data-ocid={`saved.load.button.${index + 1}`}
+            >
+              <Download size={10} />
+              LOAD ROUTE
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onFlyTo(dest.lat, dest.lng);
+                onAddAsWaypoint(dest);
+              }}
+              className="flex-1 flex items-center justify-center gap-1 py-1 border border-[#D4AF37]/60 text-[#D4AF37] text-[10px] font-bold hover:bg-[#D4AF37]/10 transition-colors"
+              title="Add as waypoint"
+              data-ocid={`saved.waypoint_button.${index + 1}`}
+            >
+              <Plus size={10} />
+              ADD WAYPOINT
+            </button>
+          </div>
         </div>
       ))}
 
