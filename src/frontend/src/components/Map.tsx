@@ -1108,32 +1108,66 @@ export function MapView({
         },
       });
 
-      // Border warning rings — 60-mile radius circles along major borders
-      map.addSource("border-warning-rings", {
+      // Country fill source — loaded from GeoJSON, used for fill + zone layers
+      map.addSource("country-borders-fill", {
         type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: BORDER_WARNING_POINTS.map((loc) =>
-            createCircle([loc.lng, loc.lat], RADIUS_KM),
-          ),
-        },
+        data: { type: "FeatureCollection", features: [] },
       });
+      // Subtle fill to shade each country
       map.addLayer({
-        id: "border-warning-rings-fill",
+        id: "country-borders-country-fill",
         type: "fill",
-        source: "border-warning-rings",
-        paint: { "fill-color": "#aa44ff", "fill-opacity": 0.05 },
+        source: "country-borders-fill",
+        paint: { "fill-color": "#7700cc", "fill-opacity": 0.04 },
         layout: { visibility: "none" },
       });
+      // Wide glow band representing the ~60-mile border zone
       map.addLayer({
-        id: "border-warning-rings-outline",
+        id: "country-borders-zone-glow",
         type: "line",
-        source: "border-warning-rings",
+        source: "country-borders-fill",
         paint: {
-          "line-color": "#aa44ff",
-          "line-width": 1.2,
-          "line-opacity": 0.5,
-          "line-dasharray": [3, 2],
+          "line-color": "#bb44ff",
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            2,
+            60,
+            5,
+            30,
+            8,
+            16,
+            12,
+            8,
+          ],
+          "line-opacity": 0.18,
+          "line-blur": 8,
+        },
+        layout: { visibility: "none" },
+      });
+      // Dashed outline ring at the edge of the 60-mile zone
+      map.addLayer({
+        id: "country-borders-zone-dash",
+        type: "line",
+        source: "country-borders-fill",
+        paint: {
+          "line-color": "#cc66ff",
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            2,
+            60,
+            5,
+            30,
+            8,
+            16,
+            12,
+            8,
+          ],
+          "line-opacity": 0.25,
+          "line-dasharray": [4, 4],
         },
         layout: { visibility: "none" },
       });
@@ -1166,19 +1200,33 @@ export function MapView({
         layout: { visibility: "none" },
       });
 
-      // Country borders
+      // Country borders — crisp purple lines (same GeoJSON source as fill)
       map.addSource("country-borders", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
       });
+      // Soft glow under the border line
+      map.addLayer({
+        id: "country-borders-glow",
+        type: "line",
+        source: "country-borders",
+        paint: {
+          "line-color": "#dd88ff",
+          "line-width": 6,
+          "line-opacity": 0.3,
+          "line-blur": 4,
+        },
+        layout: { visibility: "none" },
+      });
+      // Crisp purple border line
       map.addLayer({
         id: "country-borders-line",
         type: "line",
         source: "country-borders",
         paint: {
-          "line-color": "#aaaaff",
-          "line-width": 1.5,
-          "line-opacity": 0.7,
+          "line-color": "#cc44ff",
+          "line-width": 1.8,
+          "line-opacity": 0.9,
         },
         layout: { visibility: "none" },
       });
@@ -1537,9 +1585,11 @@ function applyStaticOverlays(
     ],
     "plane-routes": ["plane-routes-line"],
     "country-borders": [
+      "country-borders-country-fill",
+      "country-borders-zone-glow",
+      "country-borders-zone-dash",
+      "country-borders-glow",
       "country-borders-line",
-      "border-warning-rings-fill",
-      "border-warning-rings-outline",
     ],
   };
 
@@ -1571,6 +1621,10 @@ function applyStaticOverlays(
             "country-borders",
           ) as maplibregl.GeoJSONSource;
           if (s) s.setData(data);
+          const sf = map.getSource(
+            "country-borders-fill",
+          ) as maplibregl.GeoJSONSource;
+          if (sf) sf.setData(data);
         })
         .catch(() => {
           countryBordersLoadedRef.current = false;
