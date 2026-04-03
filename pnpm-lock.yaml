@@ -125,6 +125,9 @@ importers:
       '@tanstack/react-router':
         specifier: ~1.131.8
         version: 1.131.50(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@types/maplibre-gl':
+        specifier: ^1.14.0
+        version: 1.14.0
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -1728,6 +1731,10 @@ packages:
 
   '@types/js-cookie@2.2.7':
     resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==}
+
+  '@types/maplibre-gl@1.14.0':
+    resolution: {integrity: sha512-I6ibscT7UdL1oOqqCz9s1gjcolLaUPkHIIfMLusczTvlsMhjORyS6sE1g4V/NESAOL5KhNQX3/31LJH+OCGjkg==}
+    deprecated: This is a stub types definition. maplibre-gl provides its own type definitions, so you do not need this installed.
 
   '@types/node@20.19.24':
     resolution: {integrity: sha512-FE5u0ezmi6y9OZEzlJfg37mqqf6ZDSF2V/NLjUyGrR9uTZ7Sb9F7bLNZ03S4XVUNRWGA7Ck4c1kK+YnuWjl+DA==}
@@ -4463,6 +4470,10 @@ snapshots:
   '@types/geojson@7946.0.16': {}
 
   '@types/js-cookie@2.2.7': {}
+
+  '@types/maplibre-gl@1.14.0':
+    dependencies:
+      maplibre-gl: 5.22.0
 
   '@types/node@20.19.24':
     dependencies:

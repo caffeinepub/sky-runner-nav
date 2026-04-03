@@ -14,6 +14,13 @@ const CHECKLIST_DATA: Record<TravelMode, ChecklistItem[]> = {
     { id: "d8", label: "Have ID and documents ready", checked: false },
     { id: "d9", label: "Confirm destination address", checked: false },
     { id: "d10", label: "Notify someone of your route", checked: false },
+    { id: "d11", label: "Have snacks", checked: false },
+    { id: "d12", label: "Have emergency money", checked: false },
+    { id: "d13", label: "Have shapeshifter clothes", checked: false },
+    { id: "d14", label: "Have weatherproof jacket", checked: false },
+    { id: "d15", label: "Have headphones", checked: false },
+    { id: "d16", label: "Have phone charger", checked: false },
+    { id: "d17", label: "Have portable battery/car jumper", checked: false },
   ],
   flying: [
     { id: "f1", label: "Book flight tickets", checked: false },
